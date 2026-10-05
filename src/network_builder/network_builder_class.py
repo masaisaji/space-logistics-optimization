@@ -280,7 +280,7 @@ class NetworkBuilder(InitMixin):
             ][scnr] = self.n_crew
             self.cnt_com_demand[self.node_dict["LS"]][self.cnt_com_dict["consumption"]][
                 mis_end_date_id
-            ][scnr] = -self.n_crew * self.t_surf_mis * self.mis.consumption_cost
+            ][scnr] = -self.n_crew * self.t_surf_mis * self.mis.net_consumption_cost
             self.cnt_com_demand[self.node_dict["Earth"]][self.cnt_com_dict["sample"]][
                 mis_end_date_id
             ][scnr] = -self.sample_mass_ls[mis_id]

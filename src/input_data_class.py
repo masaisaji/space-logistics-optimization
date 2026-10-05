@@ -28,6 +28,15 @@ class MissionParameters:
             can be a list of float if value is different for each mission
         consumption_cost: Consumption cost (food+water+oxygen), kg/(day*person)
             Defaults to 8.655 (food=1.105, water=6.37, oxygen=1.14)
+        water_consumption: Water share of consumption_cost, kg/(day*person)
+            Defaults to 6.37 (the water term of the default consumption_cost)
+        water_recovery_rate: Fraction of water consumption recovered by a
+            regenerative life support loop in the lunar surface habitat
+            (urine and humidity condensate processing), 0 to 1. Applied to the
+            surface consumption demand only; in-transit consumption is
+            unchanged. Defaults to 0 (open loop, all water shipped), which
+            leaves results unchanged. For reference, the ISS water loop
+            reports roughly 0.93 to 0.98 total recovery.
         maintenance_cost: Maintenance cost per flight
             Defualts to 0.01 (1% mass per flight)
         use_increased_pl (optional): True if increased demand is used.
@@ -43,6 +52,8 @@ class MissionParameters:
     sample_mass: float | list[float]
     habit_pl_mass: float | list[float]
     consumption_cost: float = 8.655
+    water_consumption: float = 6.37
+    water_recovery_rate: float = 0.0
     maintenance_cost: float = 0.01
     time_interval: int = 365
     use_increased_pl: bool = False
@@ -89,6 +100,16 @@ class MissionParameters:
             self.time_interval,
         )
 
+        assert 0 <= self.water_recovery_rate <= 1, """
+        Water recovery rate must be between 0 and 1. Received: {}""".format(
+            self.water_recovery_rate
+        )
+        assert 0 <= self.water_consumption <= self.consumption_cost, """
+        Water consumption must be between 0 and the consumption cost.
+        Received water consumption: {}, consumption cost: {}""".format(
+            self.water_consumption, self.consumption_cost
+        )
+
         if isinstance(self.sample_mass, list):
             assert len(self.sample_mass) == self.n_mis, """
             Size of sample mass list must be the same as the number of missions."""
@@ -106,6 +127,11 @@ class MissionParameters:
         else:
             assert self.habit_pl_mass >= 0
             self.habit_pl_mass_ls = [self.habit_pl_mass] * self.n_mis
+
+    @property
+    def net_consumption_cost(self) -> float:
+        """Surface consumption that must be delivered, kg/(day*person), after water recovery"""
+        return self.consumption_cost - self.water_consumption * self.water_recovery_rate
 
 
 @dataclass
